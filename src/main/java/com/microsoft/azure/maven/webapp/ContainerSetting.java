@@ -48,12 +48,12 @@ public class ContainerSetting {
     /**
      * Private registry URL.
      */
-    public URL dockerRegistryUrl;
+    public URL registryUrl;
 
     public boolean isEmpty() {
         return Utils.isStringEmpty(imageName) &&
                 Utils.isStringEmpty(startUpFile) &&
                 Utils.isStringEmpty(serverId) &&
-                dockerRegistryUrl == null;
+                registryUrl == null;
     }
 }

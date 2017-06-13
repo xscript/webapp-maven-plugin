@@ -31,7 +31,7 @@ import org.apache.maven.plugin.MojoExecutionException;
  * Interface for web-app deployment handler
  */
 public interface DeployHandler {
-    void validate(WebApp app) throws MojoExecutionException;
+    void validate(final WebApp app) throws MojoExecutionException;
 
-    void deploy(WebApp app) throws MojoExecutionException;
+    void deploy(final WebApp app) throws MojoExecutionException;
 }

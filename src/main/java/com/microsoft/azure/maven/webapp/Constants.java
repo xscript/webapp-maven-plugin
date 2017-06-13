@@ -42,4 +42,6 @@ public class Constants {
     public static final String CONTAINER_SETTING_NOT_FOUND = "No configuration for containerSetting found.";
     public static final String DEPLOY_HANDLER_NOT_FOUND = "Not able to handle deployment for such configuration.";
     public static final String WEBAPP_NOT_FOUND = "Web App not found. A new one will be created.";
+    public static final String CONTAINER_NOT_SUPPORTED =
+            "Web app is not Linux-based. ContainerSetting is only supported in Linux web app.";
 }

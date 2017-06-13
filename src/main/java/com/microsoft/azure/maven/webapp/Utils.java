@@ -26,13 +26,16 @@ package com.microsoft.azure.maven.webapp;
 
 import com.microsoft.azure.management.appservice.WebApp.DefinitionStages.WithDockerContainerImage;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.settings.Server;
+import org.apache.maven.settings.Settings;
 
 /**
  * Utility class
  */
-public class Utils {
+public final class Utils {
     /**
      * Check whether string is null or empty.
+     *
      * @param str Input string.
      * @return Boolean. True means input is null or empty. False means input is a valid string.
      */
@@ -41,12 +44,24 @@ public class Utils {
     }
 
     /**
-     *
+     * Get server credential from Maven settings by server Id.
+     * @param settings Maven settings object.
+     * @param serverId Server Id.
+     * @return Server object if it exists in settings. Otherwise return null.
+     */
+    public static Server getServer(final Settings settings, String serverId) {
+        if (settings == null || isStringEmpty(serverId)) {
+            return null;
+        }
+        return settings.getServer(serverId);
+    }
+
+    /**
      * @param mojo
      * @return
      * @throws MojoExecutionException
      */
-    public static WithDockerContainerImage defineApp(WebAppAbstractMojo mojo) throws MojoExecutionException {
+    public static WithDockerContainerImage defineApp(final AbstractWebAppMojo mojo) throws MojoExecutionException {
         final boolean isGroupExisted = mojo.getAzureClient()
                 .resourceGroups()
                 .checkExistence(mojo.getResourceGroup());

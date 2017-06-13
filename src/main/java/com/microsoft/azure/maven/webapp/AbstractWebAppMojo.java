@@ -32,32 +32,29 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 
 import java.io.File;
 import java.util.Map;
 
-import static com.microsoft.azure.maven.webapp.Constants.FAIL_TO_INIT_AZURE;
-import static com.microsoft.azure.maven.webapp.Constants.USER_AGENT_MAVEN;
-import static com.microsoft.azure.maven.webapp.Constants.USER_AGENT_PLUGIN_NAME_AND_VERSION;
+import static com.microsoft.azure.maven.webapp.Constants.*;
 
 /**
  * Base abstract class for shared configurations and operations.
  */
-public abstract class WebAppAbstractMojo extends AbstractMojo {
+public abstract class AbstractWebAppMojo extends AbstractMojo {
     /**
      * The system settings for Maven. This is the instance resulting from
      * merging global and user-level settings files.
      */
     @Component
-    private Settings settings;
+    protected Settings settings;
 
     @Parameter(property = "authFile")
-    private File authFile;
+    protected File authFile;
 
     @Parameter(property = "subscriptionId")
-    private String subscriptionId;
+    protected String subscriptionId;
 
     @Parameter(property = "resourceGroup", required = true)
     protected String resourceGroup;
@@ -83,6 +80,10 @@ public abstract class WebAppAbstractMojo extends AbstractMojo {
         return internalGetAzureClient();
     }
 
+    public Settings getSettings() {
+        return settings;
+    }
+
     public String getResourceGroup() {
         return resourceGroup;
     }
@@ -105,16 +106,6 @@ public abstract class WebAppAbstractMojo extends AbstractMojo {
 
     public Map getAppSettings() {
         return appSettings;
-    }
-
-    public Server getServer(String serverId) {
-        if (settings != null && serverId != null) {
-            final Server server = settings.getServer(serverId);
-            if (server != null) {
-                return server;
-            }
-        }
-        return null;
     }
 
     protected Azure internalGetAzureClient() throws MojoExecutionException {

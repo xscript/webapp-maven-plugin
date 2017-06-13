@@ -25,10 +25,7 @@
 package com.microsoft.azure.maven.webapp;
 
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.maven.webapp.handlers.DeployHandler;
-import com.microsoft.azure.maven.webapp.handlers.PrivateDockerHubDeployHandler;
-import com.microsoft.azure.maven.webapp.handlers.PrivateDockerRegistryDeployHandler;
-import com.microsoft.azure.maven.webapp.handlers.PublicDockerHubDeployHandler;
+import com.microsoft.azure.maven.webapp.handlers.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -39,16 +36,19 @@ import static com.microsoft.azure.maven.webapp.Constants.*;
  * Goal which deploy specified docker image to a Linux web app in Azure.
  */
 @Mojo(name = "deploy", defaultPhase = LifecyclePhase.DEPLOY)
-public class DeployMojo extends WebAppAbstractMojo {
+public class DeployMojo extends AbstractWebAppMojo {
 
     public void execute() throws MojoExecutionException {
-        final WebApp app = azure.webApps().getByResourceGroup(resourceGroup, appName);
+        final WebApp app = getAzureClient().webApps().getByResourceGroup(resourceGroup, appName);
         if (app == null) {
             getLog().info(WEBAPP_NOT_FOUND);
         }
 
         getLog().info(WEBAPP_DEPLOY_START + appName + APOSTROPHE);
 
+        /**
+         * Get a DeployHandler
+         */
         final DeployHandler handler = getDeployHandler();
         if (handler == null) {
             getLog().warn(DEPLOY_HANDLER_NOT_FOUND + "\n" + DEPLOY_SKIPPED);
@@ -67,22 +67,25 @@ public class DeployMojo extends WebAppAbstractMojo {
     }
 
     /**
-     * Get DeployHandler based on configuration.
+     * Create DeployHandler based on configuration.
      * @return A new DeployHandler instance or null.
      */
-    DeployHandler getDeployHandler() {
+    public DeployHandler getDeployHandler() {
         if (containerSetting == null || containerSetting.isEmpty()) {
             getLog().info(CONTAINER_SETTING_NOT_FOUND);
             return null;
         }
+
         // Public Docker Hub image
         if (Utils.isStringEmpty(containerSetting.serverId)) {
             return new PublicDockerHubDeployHandler(this);
         }
+
         // Private Docker Hub image
-        if (containerSetting.dockerRegistryUrl == null) {
+        if (containerSetting.registryUrl == null) {
             return new PrivateDockerHubDeployHandler(this);
         }
+
         // Private Docker registry image
         return new PrivateDockerRegistryDeployHandler(this);
     }

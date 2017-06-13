@@ -48,9 +48,9 @@ public class PrivateDockerHubDeployHandler extends ContainerDeployHandler {
      * @param app
      */
     @Override
-    public void deploy(WebApp app) throws MojoExecutionException{
+    public void deploy(final WebApp app) throws MojoExecutionException{
         final ContainerSetting containerSetting = mojo.getContainerSetting();
-        final Server server = mojo.getServer(containerSetting.serverId);
+        final Server server = Utils.getServer(mojo.getSettings(), containerSetting.serverId);
         if (server == null) {
             throw new MojoExecutionException(String.format("ServerId=%s not found.", containerSetting.serverId));
         }

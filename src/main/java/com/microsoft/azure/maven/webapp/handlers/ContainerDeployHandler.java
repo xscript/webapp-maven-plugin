@@ -29,16 +29,13 @@ import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.maven.webapp.DeployMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
+import static com.microsoft.azure.maven.webapp.Constants.CONTAINER_NOT_SUPPORTED;
+
 abstract class ContainerDeployHandler implements DeployHandler {
-    protected static final String CONTAINER_NOT_SUPPORTED;
 
-    static {
-        CONTAINER_NOT_SUPPORTED = "Web app %s is not Linux-based. ContainerSetting is only supported in Linux web app.";
-    }
+    protected final DeployMojo mojo;
 
-    protected DeployMojo mojo;
-
-    public ContainerDeployHandler(DeployMojo mojo) {
+    public ContainerDeployHandler(final DeployMojo mojo) {
         this.mojo = mojo;
     }
 
@@ -49,11 +46,10 @@ abstract class ContainerDeployHandler implements DeployHandler {
         }
 
         if (app.operatingSystem() != OperatingSystem.LINUX) {
-            throw new MojoExecutionException(String.format(CONTAINER_NOT_SUPPORTED, app.name()));
+            throw new MojoExecutionException(CONTAINER_NOT_SUPPORTED);
         }
     }
 
     public void deploy(WebApp app) throws MojoExecutionException {
-        throw new MojoExecutionException("Not implemented");
     }
 }

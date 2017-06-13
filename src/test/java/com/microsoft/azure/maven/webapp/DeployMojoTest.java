@@ -24,9 +24,99 @@
 
 package com.microsoft.azure.maven.webapp;
 
-/**
- *
- */
-public class DeployMojoTest {
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.appservice.WebApps;
+import com.microsoft.azure.maven.webapp.handlers.DeployHandler;
+import com.microsoft.azure.maven.webapp.handlers.PrivateDockerHubDeployHandler;
+import com.microsoft.azure.maven.webapp.handlers.PrivateDockerRegistryDeployHandler;
+import com.microsoft.azure.maven.webapp.handlers.PublicDockerHubDeployHandler;
+import org.apache.maven.plugin.testing.MojoRule;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.File;
+
+import static junit.framework.TestCase.assertNotNull;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class DeployMojoTest {
+    @Rule
+    public MojoRule rule = new MojoRule() {
+        @Override
+        protected void before() throws Throwable {
+        }
+
+        @Override
+        protected void after() {
+        }
+    };
+
+    @Mock
+    Azure azure;
+
+    @Mock
+    WebApps webApps;
+
+    @Mock
+    DeployHandler deployHandler;
+
+    @Before
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+        when(azure.webApps()).thenReturn(webApps);
+    }
+
+    @Test
+    public void testExecute() throws Exception {
+        final DeployMojo mojo = getMojoFromPom("/pom-public-docker-hub.xml");
+        assertNotNull(mojo);
+
+        final DeployMojo mojoSpy = spy(mojo);
+        doReturn(azure).when(mojoSpy).internalGetAzureClient();
+        doReturn(deployHandler).when(mojoSpy).getDeployHandler();
+
+        when(webApps.getByResourceGroup(any(String.class), any(String.class))).thenReturn(null);
+
+        mojoSpy.execute();
+
+        verify(deployHandler, times(1)).validate(null);
+        verify(deployHandler, times(1)).deploy(null);
+    }
+
+    @Test
+    public void testDeployWithPublicDockerImage() throws Exception {
+        final DeployMojo mojo = getMojoFromPom("/pom-public-docker-hub.xml");
+        assertNotNull(mojo);
+
+        assertThat(mojo.getDeployHandler(), instanceOf(PublicDockerHubDeployHandler.class));
+    }
+
+    @Test
+    public void testDeployWebAppWithPrivateDockerImage() throws Exception {
+        final DeployMojo mojo = getMojoFromPom("/pom-private-docker-hub.xml");
+        assertNotNull(mojo);
+
+        assertThat(mojo.getDeployHandler(), instanceOf(PrivateDockerHubDeployHandler.class));
+    }
+
+    @Test
+    public void testDeployWebAppWithPrivateRegistryImage() throws Exception {
+        final DeployMojo mojo = getMojoFromPom("/pom-private-docker-registry.xml");
+        assertNotNull(mojo);
+
+        assertThat(mojo.getDeployHandler(), instanceOf(PrivateDockerRegistryDeployHandler.class));
+    }
+
+    private DeployMojo getMojoFromPom(String filename) throws Exception {
+        final File pom = new File(DeployMojoTest.class.getResource(filename).toURI());
+        return (DeployMojo) rule.lookupMojo("deploy", pom);
+    }
 }

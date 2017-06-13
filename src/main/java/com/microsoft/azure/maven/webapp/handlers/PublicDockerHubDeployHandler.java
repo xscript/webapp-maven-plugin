@@ -25,6 +25,7 @@
 package com.microsoft.azure.maven.webapp.handlers;
 
 import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.maven.webapp.ContainerSetting;
 import com.microsoft.azure.maven.webapp.DeployMojo;
 import com.microsoft.azure.maven.webapp.Utils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -49,14 +50,17 @@ public class PublicDockerHubDeployHandler extends ContainerDeployHandler {
      */
     @Override
     public void deploy(WebApp app) throws MojoExecutionException{
+        final ContainerSetting containerSetting = mojo.getContainerSetting();
         if (app == null) {
             Utils.defineApp(mojo)
-                    .withPublicDockerHubImage(mojo.getContainerSetting().imageName)
+                    .withPublicDockerHubImage(containerSetting.imageName)
+                    .withStartUpCommand(containerSetting.startUpFile)
                     .withAppSettings(mojo.getAppSettings())
                     .create();
         } else {
             app.update()
-                    .withPublicDockerHubImage(mojo.getContainerSetting().imageName)
+                    .withPublicDockerHubImage(containerSetting.imageName)
+                    .withStartUpCommand(containerSetting.startUpFile)
                     .withAppSettings(mojo.getAppSettings())
                     .apply();
         }

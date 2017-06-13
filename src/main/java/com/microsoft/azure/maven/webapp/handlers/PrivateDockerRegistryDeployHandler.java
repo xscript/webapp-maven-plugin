@@ -61,21 +61,21 @@ public class PrivateDockerRegistryDeployHandler extends ContainerDeployHandler {
     @Override
     public void deploy(WebApp app) throws MojoExecutionException {
         final ContainerSetting containerSetting = mojo.getContainerSetting();
-        final Server server = mojo.getServer(containerSetting.serverId);
+        final Server server = Utils.getServer(mojo.getSettings(), containerSetting.serverId);
         if (server == null) {
             throw new MojoExecutionException(String.format("ServerId=%s not found.", containerSetting.serverId));
         }
 
         if (app == null) {
             Utils.defineApp(mojo)
-                    .withPrivateRegistryImage(containerSetting.imageName, containerSetting.dockerRegistryUrl.toString())
+                    .withPrivateRegistryImage(containerSetting.imageName, containerSetting.registryUrl.toString())
                     .withCredentials(server.getUsername(), server.getPassword())
                     .withStartUpCommand(containerSetting.startUpFile)
                     .withAppSettings(mojo.getAppSettings())
                     .create();
         } else {
             app.update()
-                    .withPrivateRegistryImage(containerSetting.imageName, containerSetting.dockerRegistryUrl.toString())
+                    .withPrivateRegistryImage(containerSetting.imageName, containerSetting.registryUrl.toString())
                     .withCredentials(server.getUsername(), server.getPassword())
                     .withStartUpCommand(containerSetting.startUpFile)
                     .withAppSettings(mojo.getAppSettings())

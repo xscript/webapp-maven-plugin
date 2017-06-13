@@ -24,9 +24,47 @@
 
 package com.microsoft.azure.maven.webapp;
 
-/**
- *
- */
-public class UtilsTest {
+import org.apache.maven.settings.Server;
+import org.apache.maven.settings.Settings;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
+public class UtilsTest {
+    @Mock
+    private Settings settings;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testIsStringEmpty() {
+        assertTrue(Utils.isStringEmpty(null));
+        assertTrue(Utils.isStringEmpty(""));
+        assertTrue(Utils.isStringEmpty("   "));
+        assertFalse(Utils.isStringEmpty("string"));
+    }
+
+    @Test
+    public void testGetServer() {
+        final String invalidServerId = "non-existing";
+        final String validServerId = "existing";
+
+        when(settings.getServer(invalidServerId)).thenReturn(null);
+        when(settings.getServer(validServerId)).thenReturn(new Server());
+
+        assertNull(Utils.getServer(null, validServerId));
+        assertNull(Utils.getServer(settings, null));
+        assertNull(Utils.getServer(settings, invalidServerId));
+        assertNotNull(Utils.getServer(settings, validServerId));
+    }
 }

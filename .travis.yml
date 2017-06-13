@@ -1,0 +1,14 @@
+language: java
+
+jdk:
+  - oraclejdk7
+
+branches:
+  only:
+    - master
+
+script: "mvn cobertura:cobertura"
+
+after_success:
+  # test coverage reporting
+  - bash <(curl -s https://codecov.io/bash)
