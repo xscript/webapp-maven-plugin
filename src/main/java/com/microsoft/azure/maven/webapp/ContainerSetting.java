@@ -22,34 +22,38 @@
  *  SOFTWARE
  */
 
-package com.microsoft.azure.maven.webapp.deployhandlers;
+package com.microsoft.azure.maven.webapp;
 
-import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.maven.webapp.DeployMojo;
-import org.apache.maven.plugin.MojoExecutionException;
+import java.net.URL;
 
 /**
- *
+ * Docker container setting class.
  */
-public class PrivateDockerHubDeployHandler extends ContainerDeployHandler {
+public class ContainerSetting {
     /**
-     * Constructor
-     *
-     * @param mojo
+     * Docker image name
      */
-    public PrivateDockerHubDeployHandler(DeployMojo mojo) {
-        super(mojo);
-    }
+    public String imageName;
 
     /**
-     * @param app
+     * Start up file.
      */
-    @Override
-    public void deploy(WebApp app) throws MojoExecutionException{
-        app.update()
-                .withPrivateDockerHubImage(mojo.getContainer().imageName)
-                .withCredentials("", "")
-                .withAppSettings(mojo.getAppSettings())
-                .apply();
+    public String startUpFile;
+
+    /**
+     * Server Id.
+     */
+    public String serverId;
+
+    /**
+     * Private registry URL.
+     */
+    public URL dockerRegistryUrl;
+
+    public boolean isEmpty() {
+        return Utils.isStringEmpty(imageName) &&
+                Utils.isStringEmpty(startUpFile) &&
+                Utils.isStringEmpty(serverId) &&
+                dockerRegistryUrl == null;
     }
 }

@@ -22,35 +22,16 @@
  *  SOFTWARE
  */
 
-package com.microsoft.azure.maven.webapp.deployhandlers;
+package com.microsoft.azure.maven.webapp.handlers;
 
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.maven.webapp.DeployMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
- *
+ * Interface for web-app deployment handler
  */
-public class PublicDockerHubDeployHandler extends ContainerDeployHandler {
-    /**
-     * Constructor
-     *
-     * @param mojo
-     */
-    public PublicDockerHubDeployHandler(DeployMojo mojo) {
-        super(mojo);
-    }
+public interface DeployHandler {
+    void validate(WebApp app) throws MojoExecutionException;
 
-    /**
-     * Deploy
-     *
-     * @param app
-     */
-    @Override
-    public void deploy(WebApp app) throws MojoExecutionException{
-        app.update()
-                .withPublicDockerHubImage(mojo.getContainer().imageName)
-                .withAppSettings(mojo.getAppSettings())
-                .apply();
-    }
+    void deploy(WebApp app) throws MojoExecutionException;
 }

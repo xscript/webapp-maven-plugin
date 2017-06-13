@@ -24,11 +24,45 @@
 
 package com.microsoft.azure.maven.webapp;
 
+import com.microsoft.azure.management.appservice.WebApp.DefinitionStages.WithDockerContainerImage;
+import org.apache.maven.plugin.MojoExecutionException;
+
 /**
  * Utility class
  */
 public class Utils {
+    /**
+     * Check whether string is null or empty.
+     * @param str Input string.
+     * @return Boolean. True means input is null or empty. False means input is a valid string.
+     */
     public static boolean isStringEmpty(String str) {
         return str == null || str.trim().length() == 0;
+    }
+
+    /**
+     *
+     * @param mojo
+     * @return
+     * @throws MojoExecutionException
+     */
+    public static WithDockerContainerImage defineApp(WebAppAbstractMojo mojo) throws MojoExecutionException {
+        final boolean isGroupExisted = mojo.getAzureClient()
+                .resourceGroups()
+                .checkExistence(mojo.getResourceGroup());
+
+        if (isGroupExisted) {
+            return mojo.getAzureClient().webApps()
+                    .define(mojo.getAppName())
+                    .withRegion(mojo.getRegion())
+                    .withExistingResourceGroup(mojo.getResourceGroup())
+                    .withNewLinuxPlan(mojo.getPricingTier());
+        } else {
+            return mojo.getAzureClient().webApps()
+                    .define(mojo.getAppName())
+                    .withRegion(mojo.getRegion())
+                    .withNewResourceGroup(mojo.getResourceGroup())
+                    .withNewLinuxPlan(mojo.getPricingTier());
+        }
     }
 }

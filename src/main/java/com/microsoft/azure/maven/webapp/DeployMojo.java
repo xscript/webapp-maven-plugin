@@ -25,13 +25,15 @@
 package com.microsoft.azure.maven.webapp;
 
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.maven.webapp.deployhandlers.DeployHandler;
-import com.microsoft.azure.maven.webapp.deployhandlers.PrivateDockerHubDeployHandler;
-import com.microsoft.azure.maven.webapp.deployhandlers.PrivateDockerRegistryDeployHandler;
-import com.microsoft.azure.maven.webapp.deployhandlers.PublicDockerHubDeployHandler;
+import com.microsoft.azure.maven.webapp.handlers.DeployHandler;
+import com.microsoft.azure.maven.webapp.handlers.PrivateDockerHubDeployHandler;
+import com.microsoft.azure.maven.webapp.handlers.PrivateDockerRegistryDeployHandler;
+import com.microsoft.azure.maven.webapp.handlers.PublicDockerHubDeployHandler;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+
+import static com.microsoft.azure.maven.webapp.Constants.*;
 
 /**
  * Goal which deploy specified docker image to a Linux web app in Azure.
@@ -40,40 +42,45 @@ import org.apache.maven.plugins.annotations.Mojo;
 public class DeployMojo extends WebAppAbstractMojo {
 
     public void execute() throws MojoExecutionException {
-        super.execute();
-
         final WebApp app = azure.webApps().getByResourceGroup(resourceGroup, appName);
+        if (app == null) {
+            getLog().info(WEBAPP_NOT_FOUND);
+        }
 
-        getLog().info(new StringBuilder()
-                .append("Start deploying to Web App ")
-                .append(appName)
-                .append("..."));
+        getLog().info(WEBAPP_DEPLOY_START + appName + APOSTROPHE);
 
         final DeployHandler handler = getDeployHandler();
         if (handler == null) {
-            getLog().warn(new StringBuilder("No handler found for Web App deployment. Exit."));
-        } else {
-            handler.validate(app);
-            handler.deploy(app);
-
-            getLog().info(new StringBuilder()
-                    .append("Web app ")
-                    .append(appName)
-                    .append(" has been successfully deployed."));
+            getLog().warn(DEPLOY_HANDLER_NOT_FOUND + "\n" + DEPLOY_SKIPPED);
+            return;
         }
+
+        /**
+         * Invoke DeployHandler
+         */
+        handler.validate(app);
+        handler.deploy(app);
+
+        getLog().info(new StringBuilder()
+                .append(WEBAPP_DEPLOY_SUCCESS)
+                .append(appName));
     }
 
+    /**
+     * Get DeployHandler based on configuration.
+     * @return A new DeployHandler instance or null.
+     */
     DeployHandler getDeployHandler() {
-        if (container == null || container.isEmpty()) {
-            getLog().info(new StringBuilder("No configuration for container found."));
+        if (containerSetting == null || containerSetting.isEmpty()) {
+            getLog().info(CONTAINER_SETTING_NOT_FOUND);
             return null;
         }
         // Public Docker Hub image
-        if (container.serverId == null) {
+        if (Utils.isStringEmpty(containerSetting.serverId)) {
             return new PublicDockerHubDeployHandler(this);
         }
         // Private Docker Hub image
-        if (container.dockerRegistryUrl == null) {
+        if (containerSetting.dockerRegistryUrl == null) {
             return new PrivateDockerHubDeployHandler(this);
         }
         // Private Docker registry image

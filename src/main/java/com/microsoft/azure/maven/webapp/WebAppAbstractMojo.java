@@ -26,6 +26,7 @@ package com.microsoft.azure.maven.webapp;
 
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.Azure.Authenticated;
+import com.microsoft.azure.management.appservice.PricingTier;
 import com.microsoft.rest.LogLevel;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -37,13 +38,14 @@ import org.apache.maven.settings.Settings;
 import java.io.File;
 import java.util.Map;
 
+import static com.microsoft.azure.maven.webapp.Constants.FAIL_TO_INIT_AZURE;
+import static com.microsoft.azure.maven.webapp.Constants.USER_AGENT_MAVEN;
+import static com.microsoft.azure.maven.webapp.Constants.USER_AGENT_PLUGIN_NAME_AND_VERSION;
+
 /**
  * Base abstract class for shared configurations and operations.
  */
 public abstract class WebAppAbstractMojo extends AbstractMojo {
-    private static final String USER_AGENT_MAVEN = "maven";
-    private static final String USER_AGENT_PLUGIN_NAME_AND_VERSION = "webapp-maven-plugin/0.1.0";
-
     /**
      * The system settings for Maven. This is the instance resulting from
      * merging global and user-level settings files.
@@ -60,14 +62,14 @@ public abstract class WebAppAbstractMojo extends AbstractMojo {
     @Parameter(property = "resourceGroup", required = true)
     protected String resourceGroup;
 
-    @Parameter(property = "region")
+    @Parameter(property = "region", defaultValue = "westus")
     protected String region;
 
     @Parameter(property = "appName", required = true)
     protected String appName;
 
-    @Parameter(property = "container")
-    protected Container container;
+    @Parameter(property = "containerSetting")
+    protected ContainerSetting containerSetting;
 
     @Parameter(property = "appSettings")
     protected Map appSettings;
@@ -78,7 +80,7 @@ public abstract class WebAppAbstractMojo extends AbstractMojo {
         if (azure != null) {
             return azure;
         }
-        return getAzureClient();
+        return internalGetAzureClient();
     }
 
     public String getResourceGroup() {
@@ -89,17 +91,30 @@ public abstract class WebAppAbstractMojo extends AbstractMojo {
         return appName;
     }
 
-    public Container getContainer() {
-        return container;
+    public String getRegion() {
+        return region;
+    }
+
+    public PricingTier getPricingTier() {
+        return PricingTier.STANDARD_S1;
+    }
+
+    public ContainerSetting getContainerSetting() {
+        return containerSetting;
     }
 
     public Map getAppSettings() {
         return appSettings;
     }
 
-    public void execute() throws MojoExecutionException {
-        /* Common Mojo logic such as log in */
-        azure = internalGetAzureClient();
+    public Server getServer(String serverId) {
+        if (settings != null && serverId != null) {
+            final Server server = settings.getServer(serverId);
+            if (server != null) {
+                return server;
+            }
+        }
+        return null;
     }
 
     protected Azure internalGetAzureClient() throws MojoExecutionException {
@@ -115,17 +130,7 @@ public abstract class WebAppAbstractMojo extends AbstractMojo {
                     authenticated.withDefaultSubscription() :
                     authenticated.withSubscription(subscriptionId);
         } catch (Exception e) {
-            throw new MojoExecutionException("Fail to initialize Azure client object.", e);
+            throw new MojoExecutionException(FAIL_TO_INIT_AZURE, e);
         }
-    }
-
-    public Server getServer(String serverId) {
-        if (settings != null && serverId != null) {
-            final Server server = settings.getServer(serverId);
-            if (server != null) {
-                return server;
-            }
-        }
-        return null;
     }
 }

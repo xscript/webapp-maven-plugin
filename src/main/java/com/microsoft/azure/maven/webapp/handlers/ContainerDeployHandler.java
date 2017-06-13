@@ -22,39 +22,38 @@
  *  SOFTWARE
  */
 
-package com.microsoft.azure.maven.webapp;
+package com.microsoft.azure.maven.webapp.handlers;
 
+import com.microsoft.azure.management.appservice.OperatingSystem;
+import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.maven.webapp.DeployMojo;
+import org.apache.maven.plugin.MojoExecutionException;
 
-import java.net.URL;
+abstract class ContainerDeployHandler implements DeployHandler {
+    protected static final String CONTAINER_NOT_SUPPORTED;
 
-/**
- *
- */
-public class Container {
-    /**
-     *
-     */
-    public String imageName;
+    static {
+        CONTAINER_NOT_SUPPORTED = "Web app %s is not Linux-based. ContainerSetting is only supported in Linux web app.";
+    }
 
-    /**
-     *
-     */
-    public String startUpFile;
+    protected DeployMojo mojo;
 
-    /**
-     *
-     */
-    public String serverId;
+    public ContainerDeployHandler(DeployMojo mojo) {
+        this.mojo = mojo;
+    }
 
-    /**
-     *
-     */
-    public URL dockerRegistryUrl;
+    public void validate(WebApp app) throws MojoExecutionException {
+        // Skip validation for app to be created.
+        if (app == null) {
+            return;
+        }
 
-    public boolean isEmpty() {
-        return imageName == null &&
-                startUpFile == null &&
-                serverId == null &&
-                dockerRegistryUrl == null;
+        if (app.operatingSystem() != OperatingSystem.LINUX) {
+            throw new MojoExecutionException(String.format(CONTAINER_NOT_SUPPORTED, app.name()));
+        }
+    }
+
+    public void deploy(WebApp app) throws MojoExecutionException {
+        throw new MojoExecutionException("Not implemented");
     }
 }

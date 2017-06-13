@@ -22,50 +22,43 @@
  *  SOFTWARE
  */
 
-package com.microsoft.azure.maven.webapp.deployhandlers;
+package com.microsoft.azure.maven.webapp.handlers;
 
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.maven.webapp.Container;
 import com.microsoft.azure.maven.webapp.DeployMojo;
+import com.microsoft.azure.maven.webapp.Utils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.settings.Server;
 
 /**
  *
  */
-public class PrivateDockerRegistryDeployHandler extends ContainerDeployHandler {
+public class PublicDockerHubDeployHandler extends ContainerDeployHandler {
     /**
      * Constructor
+     *
      * @param mojo
      */
-    public PrivateDockerRegistryDeployHandler(DeployMojo mojo) {
+    public PublicDockerHubDeployHandler(DeployMojo mojo) {
         super(mojo);
     }
 
     /**
+     * Deploy
      *
      * @param app
-     * @throws MojoExecutionException
      */
     @Override
-    public void validate(WebApp app) throws MojoExecutionException {
-        super.validate(app);
-    }
-
-    /**
-     *
-     * @param app
-     * @throws MojoExecutionException
-     */
-    @Override
-    public void deploy(WebApp app) throws MojoExecutionException {
-        final Container containerSetting = mojo.getContainer();
-        final Server server = mojo.getServer(containerSetting.serverId);
-        app.update()
-                .withPrivateRegistryImage(containerSetting.imageName, containerSetting.dockerRegistryUrl.toString())
-                .withCredentials(server.getUsername(), server.getPassword())
-                .withStartUpCommand(containerSetting.startUpFile)
-                .withAppSettings(mojo.getAppSettings())
-                .apply();
+    public void deploy(WebApp app) throws MojoExecutionException{
+        if (app == null) {
+            Utils.defineApp(mojo)
+                    .withPublicDockerHubImage(mojo.getContainerSetting().imageName)
+                    .withAppSettings(mojo.getAppSettings())
+                    .create();
+        } else {
+            app.update()
+                    .withPublicDockerHubImage(mojo.getContainerSetting().imageName)
+                    .withAppSettings(mojo.getAppSettings())
+                    .apply();
+        }
     }
 }
