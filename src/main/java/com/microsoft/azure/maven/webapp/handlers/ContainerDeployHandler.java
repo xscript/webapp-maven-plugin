@@ -50,6 +50,5 @@ abstract class ContainerDeployHandler implements DeployHandler {
         }
     }
 
-    public void deploy(WebApp app) throws MojoExecutionException {
-    }
+    public abstract void deploy(WebApp app) throws MojoExecutionException;
 }

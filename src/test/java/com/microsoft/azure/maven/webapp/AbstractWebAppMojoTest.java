@@ -24,12 +24,18 @@
 
 package com.microsoft.azure.maven.webapp;
 
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.appservice.PricingTier;
+import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.WebApps;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.settings.Settings;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -37,10 +43,22 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.microsoft.azure.maven.webapp.Constants.FAIL_TO_INIT_AZURE;
+import static org.hamcrest.CoreMatchers.any;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractWebAppMojoTest {
+    @Mock
+    Azure azure;
+
+    @Mock
+    WebApps apps;
+
+    @Mock
+    WebApp app;
 
     @InjectMocks
     private AbstractWebAppMojo mojo = new AbstractWebAppMojo() {
@@ -56,7 +74,38 @@ public class AbstractWebAppMojoTest {
     }
 
     @Test
-    public void testWebAppPropertySet() {
+    public void testGetAzureClient() throws Exception {
+        try {
+            mojo.getAzureClient();
+        } catch (Exception e) {
+            assertEquals(FAIL_TO_INIT_AZURE, e.getMessage());
+        }
+
+        ReflectionTestUtils.setField(mojo, "azure", azure);
+        assertEquals(azure, mojo.getAzureClient());
+    }
+
+    @Test
+    public void testGetWebApp() {
+        assertNull(mojo.getWebApp());
+
+        ReflectionTestUtils.setField(mojo, "azure", azure);
+        when(azure.webApps()).thenReturn(apps);
+        when(apps.getByResourceGroup(null, null)).thenReturn(app);
+
+        assertEquals(app, mojo.getWebApp());
+    }
+
+    @Test
+    public void testGetMavenSettings() {
+        assertNull(mojo.getSettings());
+        final Settings settings = mock(Settings.class);
+        ReflectionTestUtils.setField(mojo, "settings", settings);
+        assertEquals(settings, mojo.getSettings());
+    }
+
+    @Test
+    public void testGetWebAppProperties() {
         assertNull(mojo.getResourceGroup());
         ReflectionTestUtils.setField(mojo, "resourceGroup", "ResourceGroupName");
         assertEquals("ResourceGroupName", mojo.getResourceGroup());
@@ -68,10 +117,12 @@ public class AbstractWebAppMojoTest {
         assertNull(mojo.getRegion());
         ReflectionTestUtils.setField(mojo, "region", "Region");
         assertEquals("Region", mojo.getRegion());
+
+        assertEquals(PricingTier.STANDARD_S1, mojo.getPricingTier());
     }
 
     @Test
-    public void testContainerSettingSet() {
+    public void testGetContainerSetting() {
         assertNull(mojo.getContainerSetting());
 
         final ContainerSetting container = new ContainerSetting();
@@ -81,7 +132,7 @@ public class AbstractWebAppMojoTest {
     }
 
     @Test
-    public void testAppSettingSet() {
+    public void testGetAppSetting() {
         assertNull(mojo.getAppSettings());
 
         final Map map = new HashMap();

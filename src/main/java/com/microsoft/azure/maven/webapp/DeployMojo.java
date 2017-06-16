@@ -39,12 +39,7 @@ import static com.microsoft.azure.maven.webapp.Constants.*;
 public class DeployMojo extends AbstractWebAppMojo {
 
     public void execute() throws MojoExecutionException {
-        final WebApp app = getAzureClient().webApps().getByResourceGroup(resourceGroup, appName);
-        if (app == null) {
-            getLog().info(WEBAPP_NOT_FOUND);
-        }
-
-        getLog().info(WEBAPP_DEPLOY_START + appName + APOSTROPHE);
+        getLog().info(WEBAPP_DEPLOY_START + getAppName() + APOSTROPHE);
 
         /**
          * Get a DeployHandler
@@ -58,6 +53,7 @@ public class DeployMojo extends AbstractWebAppMojo {
         /**
          * Invoke DeployHandler
          */
+        final WebApp app = getWebApp();
         handler.validate(app);
         handler.deploy(app);
 

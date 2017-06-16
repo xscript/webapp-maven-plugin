@@ -25,6 +25,7 @@
 package com.microsoft.azure.maven.webapp;
 
 import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.WebApps;
 import com.microsoft.azure.maven.webapp.handlers.DeployHandler;
 import com.microsoft.azure.maven.webapp.handlers.PrivateDockerHubDeployHandler;
@@ -43,6 +44,7 @@ import java.io.File;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -66,6 +68,9 @@ public class DeployMojoTest {
     WebApps webApps;
 
     @Mock
+    WebApp app;
+
+    @Mock
     DeployHandler deployHandler;
 
     @Before
@@ -75,7 +80,7 @@ public class DeployMojoTest {
     }
 
     @Test
-    public void testExecute() throws Exception {
+    public void testExecuteWithDeploy() throws Exception {
         final DeployMojo mojo = getMojoFromPom("/pom-public-docker-hub.xml");
         assertNotNull(mojo);
 
@@ -83,12 +88,28 @@ public class DeployMojoTest {
         doReturn(azure).when(mojoSpy).internalGetAzureClient();
         doReturn(deployHandler).when(mojoSpy).getDeployHandler();
 
-        when(webApps.getByResourceGroup(any(String.class), any(String.class))).thenReturn(null);
+        when(webApps.getByResourceGroup(any(String.class), any(String.class))).thenReturn(app);
 
         mojoSpy.execute();
 
-        verify(deployHandler, times(1)).validate(null);
-        verify(deployHandler, times(1)).deploy(null);
+        verify(deployHandler, times(1)).validate(app);
+        verify(deployHandler, times(1)).deploy(app);
+    }
+
+    @Test
+    public void testExecuteWithDeploySkipped() throws Exception {
+        final DeployMojo mojo = getMojoFromPom("/pom-no-container-setting.xml");
+        assertNotNull(mojo);
+
+        mojo.execute();
+    }
+
+    @Test
+    public void testNoDeployHandlerFound() throws Exception {
+        final DeployMojo mojo = getMojoFromPom("/pom-no-container-setting.xml");
+        assertNotNull(mojo);
+
+        assertNull(mojo.getDeployHandler());
     }
 
     @Test

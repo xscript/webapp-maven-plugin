@@ -27,6 +27,7 @@ package com.microsoft.azure.maven.webapp;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.Azure.Authenticated;
 import com.microsoft.azure.management.appservice.PricingTier;
+import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.rest.LogLevel;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -78,6 +79,14 @@ public abstract class AbstractWebAppMojo extends AbstractMojo {
             return azure;
         }
         return internalGetAzureClient();
+    }
+
+    public WebApp getWebApp() {
+        try {
+            return getAzureClient().webApps().getByResourceGroup(resourceGroup, appName);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public Settings getSettings() {

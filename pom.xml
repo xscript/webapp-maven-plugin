@@ -189,6 +189,7 @@
                     <instrumentation>
                         <excludes>
                             <exclude>**/HelpMojo.class</exclude>
+                            <exclude>**/Constants.class</exclude>
                         </excludes>
                     </instrumentation>
                 </configuration>

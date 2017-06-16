@@ -46,6 +46,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.microsoft.azure.maven.webapp.Constants.CONTAINER_NOT_SUPPORTED;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -196,6 +198,20 @@ public class DeployHandlerTest {
         setUpMockForPublicDockerHubImage();
         setUpMockForPrivateDockerHubImage();
         setUpMockForPrivateRegistryImage();
+    }
+
+    @Test
+    public void testValidationFail() throws Exception {
+        final PublicDockerHubDeployHandler handler = new PublicDockerHubDeployHandler(mojo);
+
+        final WebApp winApp = mock(WebApp.class);
+        when(winApp.operatingSystem()).thenReturn(OperatingSystem.WINDOWS);
+
+        try {
+            handler.validate(winApp);
+        } catch (Exception e) {
+            assertEquals(CONTAINER_NOT_SUPPORTED, e.getMessage());
+        }
     }
 
     @Test
